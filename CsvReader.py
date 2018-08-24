@@ -11,7 +11,17 @@ class CsvReader:
     QUOTE_OVER = 5
     FAULTED = 6
 
-    def __init__(self, delimiter: str=',', quote_char: str='"', header_row: bool=True, file: typing.TextIO=None):
+    @staticmethod
+    def _field_lambda(lambdas, field):
+        if lambdas is None:
+            return None
+        if field < len(lambdas):
+            return lambdas[field]
+        else:
+            return None
+
+    def __init__(self, delimiter: str=',', quote_char: str='"', header_row: bool=True, file: typing.TextIO=None,
+                 field_lambdas: list=None):
         if file is None:
             raise ValueError('You must provide a file to parse.')
 
@@ -23,6 +33,7 @@ class CsvReader:
         line_number = 1
         line = file.readline()
         while line:
+            field = 0
             this_line = []
             this_value = []
             for i, c in enumerate(line):
@@ -34,8 +45,13 @@ class CsvReader:
                 if self._state in (CsvReader.APPEND, CsvReader.QUOTED):
                     this_value.append(c)
                 elif self._state == CsvReader.SEPARATOR:
-                    this_line.append(''.join(this_value))
+                    lam = CsvReader._field_lambda(field_lambdas, field)
+                    if lam is not None and not (header_row and line_number == 1):
+                        this_line.append(lam(''.join(this_value)))
+                    else:
+                        this_line.append(''.join(this_value))
                     this_value = []
+                    field = field + 1
                     self._state = CsvReader.APPEND
                 elif self._state == CsvReader.DROP:
                     self._state = CsvReader.APPEND
@@ -45,7 +61,11 @@ class CsvReader:
             if self._state == CsvReader.QUOTED:
                 raise Exception('CsvReader faulted at EOL %d (Unmatched quote)' % line_number)
 
-            this_line.append(''.join(this_value))
+            lam = CsvReader._field_lambda(field_lambdas, field)
+            if lam is not None and not (header_row and line_number == 1):
+                this_line.append(lam(''.join(this_value)))
+            else:
+                this_line.append(''.join(this_value))
             all_lines.append(this_line)
             line = file.readline()
             line_number = line_number + 1
