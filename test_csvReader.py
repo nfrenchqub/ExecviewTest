@@ -29,3 +29,15 @@ class TestCsvReader(TestCase):
             csv_reader.get_row(),
             ['1', 'PG', '10', 'United States', 'Armstrong, B.J.', '6 ft 2 in', '175 lb', 'Iowa', '12.3']
         )
+
+    def test_faulting_unmatched_quote(self):
+        with open('unmatched_quote.csv') as csv_file:
+            self.assertRaises(
+                Exception,
+                lambda: print(CsvReader(header_row=True, file=csv_file).get_rows())
+            )
+        with open('unmatched_quote_2.csv') as csv_file:
+            self.assertRaises(
+                Exception,
+                lambda: print(CsvReader(header_row=True, file=csv_file).get_rows())
+            )
