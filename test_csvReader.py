@@ -19,7 +19,7 @@ class TestCsvReader(TestCase):
         with open('noquotes.csv') as csv_file:
             csv_reader = CsvReader(header_row=True, file=csv_file)
         rows = csv_reader.get_rows()
-        self.assertEqual(rows, [['c', 'd']])
+        self.assertEqual(rows, [{'a': 'c', 'b': 'd'}])
 
     def test_quote_char(self):
         with open('chicago-bulls.csv') as csv_file:

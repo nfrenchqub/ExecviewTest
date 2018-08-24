@@ -25,6 +25,7 @@ class CsvReader:
         if file is None:
             raise ValueError('You must provide a file to parse.')
 
+        self._header_line = None
         self._delimiter = delimiter
         self._quote_char = quote_char
         self._state = CsvReader.APPEND
@@ -79,7 +80,12 @@ class CsvReader:
         self._rows = len(all_lines)
 
     def get_rows(self):
+        if self._header_line:
+            return [{field_name: row[i] for i, field_name in enumerate(self._header_line)} for row in self.all_lines]
         return self.all_lines
+
+    def get_headers(self):
+        return {x: i for i, x in enumerate(self._header_line)}
 
     def get_row(self):
         self._row = self._row + 1
